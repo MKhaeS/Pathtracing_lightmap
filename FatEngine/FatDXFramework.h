@@ -24,9 +24,7 @@ using namespace DirectX;
 class FatDXFramework final
 {
 public:
-	explicit FatDXFramework();
-	
-	void NumerateOutputsForDevice(const int& noDevice);
+	FatDXFramework();
 
 	bool Initialize(const HWND& hWnd,
                     const int&  width,    const int& height,
@@ -36,6 +34,8 @@ public:
 
     // -- User interface --
     int CreateRootSignature ();
+
+	int CreateTextureRootSignature ();
 
     int CreateVertexShaderFromCso (const std::wstring& filename);
 
@@ -55,14 +55,17 @@ public:
 
     int CreatePositionColorLayout ();
 
+	int CreatePositionTextureLayout ();
+
     int CreateGeometry ();
 
     void AddGeometry (const int& gidx, const std::vector<float>& gdata);
 
-    int CreateBufferFromGeometry (const int& gidx, int* viewidx);    
+    int CreateBufferFromGeometry (const int& gidx, const int& stride, int* viewidx);
 
+	int CreateTextureResource( const int& width, const int& height, const int& samples, const DXGI_FORMAT& format );
 
-
+	struct Static3DObject;
 private:
 	HWND                                    m_hWnd_;
 
@@ -75,7 +78,7 @@ private:
 
     ComPtr<ID3D12Fence>                     m_Fence_                = nullptr;
     HANDLE                                  m_FenceEvent_           = nullptr;
-    int                                     m_FenceValue_           = 0;
+    long int                                m_FenceValue_           = 0;
 
 	ComPtr<ID3D12CommandQueue>              m_CommandQueue_         = nullptr;
 	ComPtr<ID3D12CommandAllocator>          m_CommandAllocator_     = nullptr;
@@ -158,16 +161,16 @@ private:
 
     
     //User service collections;
-    std::vector<ComPtr<ID3D12RootSignature>>                m_RootSignatures_;
-    int                                                     m_nRootSignatures_         = 0;
-    std::vector<ComPtr<ID3DBlob>>                           m_VertexShaders_;
-    int                                                     m_nVertexShaders_          = 0;
-    std::vector<ComPtr<ID3DBlob>>                           m_PixelShaders_;
-    int                                                     m_nPixelShaders_           = 0;
-    std::vector<D3D12_RASTERIZER_DESC>                      m_RasterizerDescs_;
+    std::vector<ComPtr<ID3D12RootSignature>>                m_RootSignatures;
+    int                                                     m_nRootSignatures         = 0;
+    std::vector<ComPtr<ID3DBlob>>                           m_VertexShaders;
+    int                                                     m_nVertexShaders          = 0;
+    std::vector<ComPtr<ID3DBlob>>                           m_PixelShaders;
+    int                                                     m_nPixelShaders           = 0;
+    std::vector<D3D12_RASTERIZER_DESC>                      m_RasterizerDescs;
     int                                                     m_nRasterizerDescs         = 0;
-    std::vector<D3D12_INPUT_LAYOUT_DESC>                    m_LayoutDescs_;
-    int                                                     m_nLayoutDescs_            = 0;
+    std::vector<D3D12_INPUT_LAYOUT_DESC>                    m_LayoutDescs;
+    int                                                     m_nLayoutDescs            = 0;
     std::vector<ComPtr<ID3D12PipelineState>>                m_PSOs_;
     int                                                     m_nPSOs_                   = 0;
     std::vector<D3D12_INPUT_ELEMENT_DESC>                   m_ElementsDescs_;
