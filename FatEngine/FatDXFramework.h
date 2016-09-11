@@ -26,9 +26,11 @@ class FatDXFramework final
 public:
 	FatDXFramework();
 
-	bool Initialize(const HWND& hWnd,
-                    const int&  width,    const int& height,
-		            const DXGI_FORMAT& buffer_format);
+    bool Initialize              ( const HWND& hWnd,
+                                   const int&  width, const int& height,
+                                   const DXGI_FORMAT& buffer_format );
+
+    void Render ();	
 
     
     // --- User interface ---
@@ -63,8 +65,18 @@ public:
     int CreateBufferFromGeometry (const int& gidx, const int& stride, int* viewidx);
 
 	int CreateTextureResource( const int& width, const int& height, const int& samples, const DXGI_FORMAT& format );
+    
+    struct Static3DObject
+    {
+        int		VertexBufferView	= 0;
+        int     NumOfVerts          = 0;
+        int		RootSignature		= 0;
+        int		Pso					= 0;
+        bool	Visible				= true;
+    };
+    int AddStaticObject( std::shared_ptr<Static3DObject> object );
 
-	struct Static3DObject;
+
 private:
 
     // --- Initialization --- "FatDXInit.cpp"
@@ -104,7 +116,7 @@ private:
     UINT                                    m_uSizeCbvSrv_;
 
     D3D12_VIEWPORT                          m_Viewport_;    
-
+    
     bool CreateFactory           ();
     void NumerateAdapters        ();
     bool CreateDeviceFromAdapter ( ComPtr<IDXGIAdapter1> noAdapter );
@@ -123,22 +135,22 @@ private:
 
 
     // --- Resource manipulation ---
-    ComPtr<ID3D12Resource>    CreateGpuBuffer       ( const UINT64&   bufferSize );
+    ComPtr<ID3D12Resource>      CreateGpuBuffer           ( const UINT64&   bufferSize );
 
-    ComPtr<ID3D12Resource> CreateUploadBuffer       ( const UINT64&   bufferSize );
+    ComPtr<ID3D12Resource>      CreateUploadBuffer        ( const UINT64&   bufferSize );
 
-    ComPtr<ID3D12Resource>      LoadDataToGpu       ( const void*                 vertexData,
-                                                      const UINT64&               dataSize,
-                                                      ComPtr<ID3D12Resource>&     uploadBuffer );
+    ComPtr<ID3D12Resource>      LoadDataToGpu             ( const void*                 vertexData,
+                                                            const UINT64&               dataSize,
+                                                            ComPtr<ID3D12Resource>&     uploadBuffer );
 
-    bool                     CopyDataToBuffer       ( const ComPtr<ID3D12Resource>&   destination,
-                                                      const ComPtr<ID3D12Resource>&   upload,
-                                                      const void*                     pDataSource,
-                                                      const UINT64&                   dataSize ) const;     
+    bool                        CopyDataToBuffer          ( const ComPtr<ID3D12Resource>&   destination,
+                                                            const ComPtr<ID3D12Resource>&   upload,
+                                                            const void*                     pDataSource,
+                                                            const UINT64&                   dataSize ) const;     
 
-    void                  ResourceStateTransition   ( const ComPtr<ID3D12Resource>&   resource,
-                                                      D3D12_RESOURCE_STATES           prev_state, 
-                                                      D3D12_RESOURCE_STATES           next_state );
+    void                        ResourceStateTransition   ( const ComPtr<ID3D12Resource>&   resource,
+                                                            D3D12_RESOURCE_STATES           prev_state, 
+                                                            D3D12_RESOURCE_STATES           next_state );
     // -end- --- Resource manipulation ---
 
     ComPtr<ID3DBlob> LoadBinary ( const std::wstring& filename );
@@ -148,7 +160,7 @@ private:
     Time t0;
 
     //    
-    void Render ();
+    
     void WaitSignal ();
 
     
@@ -163,17 +175,25 @@ private:
     int                                                     m_nRasterizerDescs         = 0;
     std::vector<D3D12_INPUT_LAYOUT_DESC>                    m_LayoutDescs;
     int                                                     m_nLayoutDescs            = 0;
-    std::vector<ComPtr<ID3D12PipelineState>>                m_PSOs_;
-    int                                                     m_nPSOs_                   = 0;
-    std::vector<D3D12_INPUT_ELEMENT_DESC>                   m_ElementsDescs_;
-    std::vector<std::shared_ptr<std::vector<float>>>        m_Geometries_;
-    int                                                     m_nGeometries_             = 0;
-    std::vector<ComPtr<ID3D12Resource>>                     m_Resources_;
-    int                                                     m_nResourcses_             = 0;
-    std::vector<ComPtr<ID3D12DescriptorHeap>>               m_DescriptorHeaps_;
-    std::vector<D3D12_CPU_DESCRIPTOR_HANDLE>                m_DescriptorHandles_;
-    std::vector<D3D12_VERTEX_BUFFER_VIEW>                   m_VertexBufferViews_;
-    int                                                     m_nVertexBuffersViews_     = 0;
+    std::vector<ComPtr<ID3D12PipelineState>>                m_Psos;
+    int                                                     m_nPsos                   = 0;
+    std::vector<D3D12_INPUT_ELEMENT_DESC>                   m_ElementsDescs;
+    std::vector<std::shared_ptr<std::vector<float>>>        m_Geometries;
+    int                                                     m_nGeometries             = 0;
+    std::vector<ComPtr<ID3D12Resource>>                     m_Resources;
+    int                                                     m_nResourcses             = 0;
+    std::vector<ComPtr<ID3D12DescriptorHeap>>               m_DescriptorHeaps;
+    std::vector<D3D12_CPU_DESCRIPTOR_HANDLE>                m_DescriptorHandles;
+    std::vector<D3D12_VERTEX_BUFFER_VIEW>                   m_VertexBufferViews;
+    int                                                     m_nVertexBuffersViews     = 0;
+
+    std::vector<std::shared_ptr<Static3DObject>>            m_StaticObjects;
+    int                                                     m_nStaticObjects          = 0;
+
+
+
+
+
 
 
 

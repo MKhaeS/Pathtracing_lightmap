@@ -28,8 +28,9 @@ protected:
 	mutable int m_ViewIndex_;
 
 	virtual std::unique_ptr<std::vector<float>> 
-                GetVertexColorData (const int& index, const int& width, 
-                                    const int& height, const float& depth) const = 0;
+                GetVertexColorData (const int&  index,          const int&      width, 
+                                    const int&  height,         const float&    depth,
+                                    int*        numOfVerts,     int*            stride ) const = 0;
 
     
 

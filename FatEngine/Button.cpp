@@ -12,10 +12,11 @@ Button::Button (const int& x,           const int& y,
 }
 
 
-std::unique_ptr<std::vector<float>> Button::GetVertexColorData (const int & index, const int& width,
-                                                                const int& height, const float& depth) const {
+std::unique_ptr<std::vector<float>> Button::GetVertexColorData (const int &     index,      const int&      width,
+                                                                const int&      height,     const float&    depth,
+                                                                int*            numOfVerts, int*            stride) const {
     this->m_ViewIndex_ = index;
-    float x = 2*static_cast<float>(m_Pos_x_) / width - 1;
+    float x = 2 * static_cast<float>(m_Pos_x_) / width - 1;
     float y = 1 - 2*static_cast<float>(m_Pos_y_) / height;
     float z = depth;
     float w = 2*static_cast<float>(m_Width_) / width;
@@ -32,6 +33,7 @@ std::unique_ptr<std::vector<float>> Button::GetVertexColorData (const int & inde
         x, y - h, z, r, g, b, 1.0f,
         x + w, y, z, r, g, b, 1.0f
     });
-
+    *numOfVerts = 6;
+    *stride = 28;
     return std::move (vdata);
 }

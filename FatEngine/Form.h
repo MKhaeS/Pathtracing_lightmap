@@ -45,7 +45,7 @@ private:
 	std::vector<std::shared_ptr<Component>> m_ComponentsList;
 
 		
-	virtual void Update ();
+	virtual void Update () final;
 
 	friend class Application;
 	friend LRESULT CALLBACK WndProc(HWND, UINT, WPARAM, LPARAM);
@@ -57,5 +57,19 @@ private:
     bool InitDxContext (HWND hWnd);
 
     void OnMouseClickHandler (WPARAM wParam, LPARAM lParam);
+
+	//Inreface
+
+	int color_root_signature = 0;
+	int color_pso = 0;
+	int texture_root_signature = 0;
+	int texture_pso = 0;
+	int rasterizer_desc = 0;
+	int color_buffer_view = 0;
+	int texture_buffer_view = 0;
+
+	void CreateContextForColorShader();
+	void CreateContextForTextureShader();
+
 };
 

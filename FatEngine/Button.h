@@ -14,5 +14,6 @@ protected:
     
     virtual std::unique_ptr<std::vector<float>>
                                 GetVertexColorData (const int&	index, const int& width,
-                                                    const int& height, const float& depth) const override;
+                                                    const int& height, const float& depth,
+                                                    int* numOfVerts, int* stride ) const override;
 };

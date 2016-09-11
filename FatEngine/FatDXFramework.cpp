@@ -1,7 +1,6 @@
-#include "FatDXFramework.h"
 #pragma once
 
-
+#include "FatDXFramework.h"
 
 
 FatDXFramework::FatDXFramework() {
@@ -13,42 +12,6 @@ FatDXFramework::FatDXFramework() {
     }
 #endif    
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 ComPtr<ID3DBlob> FatDXFramework::LoadBinary ( const std::wstring & filename ) {
@@ -104,8 +67,8 @@ int FatDXFramework::CreateTextureRootSignature () {
 	// create a descriptor table
 	D3D12_ROOT_DESCRIPTOR_TABLE descTable = {};
 	{
-		descTable.NumDescriptorRanges = 1; // we only have one range
-		descTable.pDescriptorRanges = &descRange; // the pointer to the beginning of our ranges array
+		descTable.NumDescriptorRanges = 1;
+		descTable.pDescriptorRanges = &descRange; 
 	}
 
 	D3D12_ROOT_PARAMETER  rootParameter = {};
@@ -159,7 +122,6 @@ int FatDXFramework::CreateTextureRootSignature () {
 	++m_nRootSignatures;
 
 	return (m_nRootSignatures - 1);
-
 }
 
 int FatDXFramework::CreateVertexShaderFromCso (const std::wstring & filename) {
@@ -254,9 +216,9 @@ int FatDXFramework::CreatePipelineStateObject (const int & rootsignature,
     psoDesc.InputLayout = m_LayoutDescs[layout];
     ComPtr<ID3D12PipelineState> pso;
     HRESULT res = m_Device_->CreateGraphicsPipelineState (&psoDesc, IID_PPV_ARGS (&pso));
-    m_PSOs_.push_back (pso);
-    ++m_nPSOs_;
-    return (m_nPSOs_ - 1);
+    m_Psos.push_back (pso);
+    ++m_nPsos;
+    return (m_nPsos - 1);
 }
 
 int FatDXFramework::CreatePositionColorLayout () {
@@ -276,13 +238,13 @@ int FatDXFramework::CreatePositionColorLayout () {
         vertDesc[1].InstanceDataStepRate = 0;
     }
 
-    m_ElementsDescs_.push_back (vertDesc[0]);
-    m_ElementsDescs_.push_back (vertDesc[1]);
+    m_ElementsDescs.push_back (vertDesc[0]);
+    m_ElementsDescs.push_back (vertDesc[1]);
 
 
     D3D12_INPUT_LAYOUT_DESC layoutDesc ={};
     {
-        layoutDesc.pInputElementDescs = &*(m_ElementsDescs_.end() - 2);
+        layoutDesc.pInputElementDescs = &*(m_ElementsDescs.end() - 2);
         layoutDesc.NumElements = 2;
     }
     m_LayoutDescs.push_back (layoutDesc);
@@ -307,13 +269,13 @@ int FatDXFramework::CreatePositionTextureLayout () {
 		vertDesc[1].InstanceDataStepRate = 0;
 	}
 
-	m_ElementsDescs_.push_back (vertDesc[0]);
-	m_ElementsDescs_.push_back (vertDesc[1]);
+	m_ElementsDescs.push_back (vertDesc[0]);
+	m_ElementsDescs.push_back (vertDesc[1]);
 
 
 	D3D12_INPUT_LAYOUT_DESC layoutDesc ={};
 	{
-		layoutDesc.pInputElementDescs = &*(m_ElementsDescs_.end () - 2);
+		layoutDesc.pInputElementDescs = &*(m_ElementsDescs.end () - 2);
 		layoutDesc.NumElements = 2;
 	}
 	m_LayoutDescs.push_back (layoutDesc);
@@ -322,33 +284,31 @@ int FatDXFramework::CreatePositionTextureLayout () {
 }
 
 int FatDXFramework::CreateGeometry () {
-    m_Geometries_.push_back (std::make_shared<std::vector<float>> ());
-    ++m_nGeometries_;
-    return (m_nGeometries_ - 1);
+    m_Geometries.push_back (std::make_shared<std::vector<float>> ());
+    ++m_nGeometries;
+    return (m_nGeometries - 1);
 }
 
 void FatDXFramework::AddGeometry (const int & gidx, const std::vector<float>& gdata) {
-	if (gidx < m_Geometries_.size ()) {
-		auto geometry = m_Geometries_[gidx];
+	if (gidx < m_Geometries.size ()) {
+		auto geometry = m_Geometries[gidx];
 		geometry->insert (geometry->end (), gdata.begin (), gdata.end ());
 	}
 }
 
 int FatDXFramework::CreateBufferFromGeometry (const int & gidx, const int& stride, int* viewidx) {
-    int buffer_size = 4 * m_Geometries_[gidx]->size ();   
+    int buffer_size = 4 * m_Geometries[gidx]->size ();   
 
     ComPtr<ID3D12Resource> uploadbuffer;
-    m_CommandAllocator_->Reset ();
-    m_CommandList_->Reset (m_CommandAllocator_.Get (), nullptr);
-    ComPtr<ID3D12Resource> buffer = LoadDataToGpu (m_Geometries_[gidx]->data (), buffer_size, uploadbuffer);
+    ComPtr<ID3D12Resource> buffer = LoadDataToGpu (m_Geometries[gidx]->data (), buffer_size, uploadbuffer);
     m_CommandList_->Close ();
     ComPtr<ID3D12CommandList> cmdsList[] ={ m_CommandList_.Get () };
     m_CommandQueue_->ExecuteCommandLists (_countof (cmdsList), cmdsList->GetAddressOf ());
     HRESULT hr = m_CommandQueue_->Signal (m_Fence_.Get (), m_FenceValue_);
     WaitSignal ();
 
-    m_Resources_.push_back (buffer);
-    ++m_nResourcses_;
+    m_Resources.push_back (buffer);
+    ++m_nResourcses;
 
     D3D12_VERTEX_BUFFER_VIEW vbView;
     {
@@ -357,10 +317,10 @@ int FatDXFramework::CreateBufferFromGeometry (const int & gidx, const int& strid
         vbView.StrideInBytes = stride;
     }
 
-    m_VertexBufferViews_.push_back (vbView);
-    *viewidx = m_nVertexBuffersViews_;
-    ++m_nVertexBuffersViews_;
-    return (m_nResourcses_ - 1);
+    m_VertexBufferViews.push_back (vbView);
+    *viewidx = m_nVertexBuffersViews;
+    ++m_nVertexBuffersViews;
+    return (m_nVertexBuffersViews - 1);
 }
 
 int FatDXFramework::CreateTextureResource( const int & width, const int & height, const int & samples, const DXGI_FORMAT & format ) {
@@ -435,31 +395,43 @@ int FatDXFramework::CreateTextureResource( const int & width, const int & height
 	return 0;
 }
 
+int FatDXFramework::AddStaticObject( std::shared_ptr<Static3DObject> object ) {
+    m_StaticObjects.push_back( object );
+    ++m_nStaticObjects;
+
+    return (m_nStaticObjects - 1);
+}
+
 
 void FatDXFramework::Render ()
 {    
-    ResourceStateTransition (m_SwapChainBuffers_[m_CurrentBuffer_], D3D12_RESOURCE_STATE_PRESENT,
-        D3D12_RESOURCE_STATE_RENDER_TARGET);
-    
-    m_CommandList_->RSSetViewports (1, &m_Viewport_);
-    D3D12_RECT scissor{ 0.0f, 0.0f, m_ClientWidth_, m_ClientHeight_ };
-    m_CommandList_->RSSetScissorRects (1, &scissor);    
+    m_CommandList_->RSSetViewports ( 1, &m_Viewport_ );
+    D3D12_RECT scissor { 0.0f, 0.0f, m_ClientWidth_, m_ClientHeight_ };
+    m_CommandList_->RSSetScissorRects ( 1, &scissor );
+    ResourceStateTransition (m_SwapChainBuffers_[m_CurrentBuffer_], 
+                              D3D12_RESOURCE_STATE_PRESENT,
+                              D3D12_RESOURCE_STATE_RENDER_TARGET);    
+    //m_CommandList_->RSSetViewports ( 1, &m_Viewport_ );
+    //D3D12_RECT scissor { 0.0f, 0.0f, m_ClientWidth_, m_ClientHeight_ };
+    //m_CommandList_->RSSetScissorRects ( 1, &scissor );
     float c[] = { 0.1f, 0.3f, 0.5f, 1.0f };
     D3D12_CPU_DESCRIPTOR_HANDLE temp_desc = m_RtvHeap_->GetCPUDescriptorHandleForHeapStart ();
     temp_desc.ptr += m_CurrentBuffer_ * m_uSizeRtv_;
     m_CommandList_->OMSetRenderTargets (1, &temp_desc, true, &m_DsvHeapHandle_);
-    //m_CommandList_->ClearRenderTargetView (temp_desc, c, 0, nullptr);
-    m_CommandList_->ClearDepthStencilView (m_DsvHeapHandle_, D3D12_CLEAR_FLAG_DEPTH | D3D12_CLEAR_FLAG_STENCIL, 1.0f, 0, 0, nullptr);
+    m_CommandList_->ClearRenderTargetView (temp_desc, c, 0, nullptr);
+    m_CommandList_->ClearDepthStencilView (m_DsvHeapHandle_, D3D12_CLEAR_FLAG_DEPTH | D3D12_CLEAR_FLAG_STENCIL, 1.0f, 0, 0, nullptr);    
     
-    m_CommandList_->SetPipelineState ( m_PSOs_[0].Get ( ) );
-    m_CommandList_->SetGraphicsRootSignature (m_RootSignatures[0].Get ());
 
     m_CommandList_->IASetPrimitiveTopology (D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
     int i = 0;
-    for (auto g : m_Geometries_) {
-        int num_of_verts = 4*g->size () / m_VertexBufferViews_[i].StrideInBytes;
-        m_CommandList_->IASetVertexBuffers (0, 1, &m_VertexBufferViews_[i]);
-        m_CommandList_->DrawInstanced (num_of_verts, 1, 0, 0);
+    for (auto o : m_StaticObjects) {
+        int n_rs = m_StaticObjects[i]->RootSignature;
+        int n_pso = m_StaticObjects[i]->Pso;
+        int n_vbview = m_StaticObjects[i]->VertexBufferView;
+        m_CommandList_->SetGraphicsRootSignature ( m_RootSignatures[n_rs].Get () );
+        m_CommandList_->SetPipelineState ( m_Psos[n_pso].Get () );
+        m_CommandList_->IASetVertexBuffers (0, 1, &m_VertexBufferViews[n_vbview]);
+        m_CommandList_->DrawInstanced (m_StaticObjects[i]->NumOfVerts, 1, 0, 0);
         ++i;
     }
 
