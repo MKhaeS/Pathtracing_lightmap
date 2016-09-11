@@ -12,11 +12,6 @@ DXForm::DXForm()
 	CreateForm();     
 }
 
-void DXForm::Update ()
-{
-    DxFramework->Update ();
-}
-
 void DXForm::InitComponents ()
 {
     width_   = GetSystemMetrics(SM_CXSCREEN) - 100;

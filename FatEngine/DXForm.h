@@ -9,7 +9,6 @@ class DXForm final : private Form
 {
 public:
 	DXForm();
-    virtual void Update () override;
     using Form::GetHWND;
 
 private:

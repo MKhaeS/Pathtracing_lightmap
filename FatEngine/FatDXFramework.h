@@ -30,9 +30,8 @@ public:
                     const int&  width,    const int& height,
 		            const DXGI_FORMAT& buffer_format);
 
-    void Update ();
-
-    // -- User interface --
+    
+    // --- User interface ---
     int CreateRootSignature ();
 
 	int CreateTextureRootSignature ();
@@ -67,7 +66,9 @@ public:
 
 	struct Static3DObject;
 private:
-	HWND                                    m_hWnd_;
+
+    // --- Initialization --- "FatDXInit.cpp"
+	HWND                                    m_hWnd_                 = 0;
 
 	ComPtr<ID3D12Debug>                     m_DebugController_      = nullptr;
 	bool                                    m_bDebugLayerActive_    = false;
@@ -102,53 +103,44 @@ private:
     UINT                                    m_uSizeDsv_;
     UINT                                    m_uSizeCbvSrv_;
 
-	
-	std::vector <ComPtr<IDXGIOutput>>       m_DeviceOutputs_;
-
     D3D12_VIEWPORT                          m_Viewport_;    
 
-	bool CreateFactory();
-	void NumerateAdapters();
-	bool CreateDeviceFromAdapter(ComPtr<IDXGIAdapter1> noAdapter);
-	bool CreateFence();
-	void AssignDescriptorSizes();
-	bool CreateCommandStructure();
-	bool CreateSwapChain(const int&                     width, const int& height,
-		                 const DXGI_FORMAT&     buffer_format, const int& nBuffers);
+    bool CreateFactory           ();
+    void NumerateAdapters        ();
+    bool CreateDeviceFromAdapter ( ComPtr<IDXGIAdapter1> noAdapter );
+	bool CreateFence             ();
+	void AssignDescriptorSizes   ();
+	bool CreateCommandStructure  ();
+	bool CreateSwapChain         ( const int&            width,          const int& height,
+		                           const DXGI_FORMAT&    buffer_format,  const int& nBuffers);
 
-	bool                 CreateDescriptorHeaps();
-	bool                CreateRenderTargetView();
-    bool                CreateDepthStencilView();
-    void                           SetViewport( const float& top_left_x,  const float& top_left_y, 
-                                                const float& width,       const float& height);
+	bool CreateDescriptorHeaps   ();
+	bool CreateRenderTargetView  ();
+    bool CreateDepthStencilView  ();
+    void SetViewport             ( const float& top_left_x,  const float& top_left_y, 
+                                   const float& width,       const float& height);
+    //-end- --- Initialization ---
 
 
+    // --- Resource manipulation ---
+    ComPtr<ID3D12Resource>    CreateGpuBuffer       ( const UINT64&   bufferSize );
 
-    // Resource manipulations
-    ComPtr<ID3D12Resource>    CreateGpuBuffer ( const UINT64& bufferSize );
+    ComPtr<ID3D12Resource> CreateUploadBuffer       ( const UINT64&   bufferSize );
 
-    ComPtr<ID3D12Resource> CreateUploadBuffer ( const UINT64& bufferSize );
+    ComPtr<ID3D12Resource>      LoadDataToGpu       ( const void*                 vertexData,
+                                                      const UINT64&               dataSize,
+                                                      ComPtr<ID3D12Resource>&     uploadBuffer );
 
-    ComPtr<ID3D12Resource>      LoadDataToGpu ( const void* vertexData,
-                                                const UINT64& dataSize,
-                                                ComPtr<ID3D12Resource>& uploadBuffer );
+    bool                     CopyDataToBuffer       ( const ComPtr<ID3D12Resource>&   destination,
+                                                      const ComPtr<ID3D12Resource>&   upload,
+                                                      const void*                     pDataSource,
+                                                      const UINT64&                   dataSize ) const;     
 
-    bool                     CopyDataToBuffer ( const ComPtr<ID3D12Resource>& destination,
-                                                const ComPtr<ID3D12Resource>& upload,
-                                                const void* pDataSource,
-                                                const UINT64& dataSize ) const;     
+    void                  ResourceStateTransition   ( const ComPtr<ID3D12Resource>&   resource,
+                                                      D3D12_RESOURCE_STATES           prev_state, 
+                                                      D3D12_RESOURCE_STATES           next_state );
+    // -end- --- Resource manipulation ---
 
-    void                  ChangeResourceState ( const ComPtr<ID3D12Resource>& resource,
-                                                D3D12_RESOURCE_STATES prev_state, 
-                                                D3D12_RESOURCE_STATES next_state );
-    /////////////////////////
-    ComPtr<ID3D12Resource> m_VertBuffer_ = nullptr;
-    D3D12_VERTEX_BUFFER_VIEW m_VBview_;
-    
-    //
-    ComPtr<ID3D12PipelineState> m_Pso_ = nullptr;
-    ComPtr<ID3D12RootSignature> m_RootSignature_ = nullptr;
-    void BuildPSO();
     ComPtr<ID3DBlob> LoadBinary ( const std::wstring& filename );
 
 
