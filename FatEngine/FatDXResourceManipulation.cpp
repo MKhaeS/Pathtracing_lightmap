@@ -70,7 +70,6 @@ ComPtr<ID3D12Resource> FatDXFramework::CreateUploadBuffer ( const UINT64 &  buff
 }
 
 
-
 ComPtr<ID3D12Resource> FatDXFramework::LoadDataToGpu ( const void * pVertexData, const UINT64& dataSize,
                                                        ComPtr<ID3D12Resource>& uploadBuffer ) {
     // Important to keep pointer to uploadBuffer after the function returns

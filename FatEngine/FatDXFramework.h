@@ -68,8 +68,12 @@ public:
     // --- Textures ---
 	int CreateTexture2D( const int& width, const int& height, 
                          const int& samples, const DXGI_FORMAT& format );
-    bool CreateRtvForTexture( const int& texture );
-	bool CreateSrvForTexture( const int& texture );
+	bool					CreateRtvForTexture( const int& texture );
+	bool					CreateSrvForTexture( const int& texture );
+	void	LoadTextureFromDds (int texture, const std::wstring& filename);
+    ///
+    int blabla ();
+    ///
 
 
 

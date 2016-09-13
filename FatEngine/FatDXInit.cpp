@@ -293,10 +293,6 @@ void FatDXFramework::SetViewport( const float & top_left_x, const float & top_le
     m_Viewport_.Height      = height;
     m_Viewport_.MinDepth    = 0.0f;
     m_Viewport_.MaxDepth    = 1.0f;
-
-    m_CommandList_->RSSetViewports ( 1, &m_Viewport_ );
-    D3D12_RECT scissor { 0.0f, 0.0f, m_ClientWidth_, m_ClientHeight_ };
-    m_CommandList_->RSSetScissorRects ( 1, &scissor );
     m_CommandList_->Close ();
     ComPtr<ID3D12CommandList> new_cmdsList[] = { m_CommandList_.Get () };
     m_CommandQueue_->ExecuteCommandLists ( _countof ( new_cmdsList ), new_cmdsList->GetAddressOf () );

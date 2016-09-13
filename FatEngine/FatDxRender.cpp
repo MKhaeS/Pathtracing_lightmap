@@ -87,17 +87,39 @@ void FatDXFramework::SetRenderTarget( const int & rtvTexture, const XMFLOAT4& cl
 
 
 void FatDXFramework::DrawStaticObjectsSets( int* noObjects, const int & size ) {
-    for ( int i = 0; i < size; ++i ) {
-        for ( auto o : *m_StaticObjectsSets[noObjects[i]] ) {
+    for (int i = 0; i < m_StaticObjectsSets.size (); ++i) {
+        for (auto o : *m_StaticObjectsSets[i]) {
             int n_rs = o->RootSignature;
             int n_pso = o->Pso;
             int n_vbview = o->VertexBufferView;
-            m_CommandList_->IASetPrimitiveTopology ( o->Topology );
+            m_CommandList_->IASetPrimitiveTopology (o->Topology);
+            m_CommandList_->SetGraphicsRootSignature (m_RootSignatures[n_rs].Get ());
 
-            m_CommandList_->SetGraphicsRootSignature ( m_RootSignatures[n_rs].Get () );
-            m_CommandList_->SetPipelineState ( m_Psos[n_pso].Get () );
-            m_CommandList_->IASetVertexBuffers ( 0, 1, &m_VertexBufferViews[n_vbview] );
-            m_CommandList_->DrawInstanced ( o->NumOfVerts, 1, 0, 0 );
+            for (int i = 0; i < o->RootParameters.size (); ++i) {
+                RootParameter rp = o->RootParameters[i];
+                switch (rp.Type) {
+                case D3D12_ROOT_PARAMETER_TYPE_DESCRIPTOR_TABLE:
+                    if (rp.Texture > -1) {
+                        Texture2D& tex = *m_Textures[rp.Texture];
+                        ResourceStateTransition (tex.Resource,
+                                                 tex.State,
+                                                 D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE);
+                        m_CommandList_->
+                            SetDescriptorHeaps (1, tex.SrvDescriptorHeap.GetAddressOf ());
+                        m_CommandList_->
+                            SetGraphicsRootDescriptorTable (rp.Slot,
+                                                            tex.SrvDescriptorHeap->GetGPUDescriptorHandleForHeapStart ());
+                    } else {
+
+                    }
+                    break;
+                }
+            }
+
+
+            m_CommandList_->SetPipelineState (m_Psos[n_pso].Get ());
+            m_CommandList_->IASetVertexBuffers (0, 1, &m_VertexBufferViews[n_vbview]);
+            m_CommandList_->DrawInstanced (o->NumOfVerts, 1, 0, 0);
         }
     }
 }

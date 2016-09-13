@@ -35,9 +35,8 @@ void Form::UpdateView () {
 }
 
 void Form::Update () {
-    DxFramework->SetRenderTarget( back_texture, XMFLOAT4( 0.0f, 0.0f, 0.0f, 1.0f ) );
-    int obj[] = { 0 };
-    DxFramework->DrawStaticObjectsSets( obj, 1 );
+    //DxFramework->SetRenderTarget( back_texture, XMFLOAT4( 0.0f, 0.0f, 0.0f, 1.0f ) );
+
     DxFramework->Render();
 }
 
@@ -51,11 +50,11 @@ bool Form::InitDxContext (HWND hWnd) {
 	float w = 0.5f;
 	std::vector<float> render_plane_data = {
 		-w,  w, 1.0f,  0.0f, 0.0f,
-		w,  w, 1.0f,  1.0f, 0.0f,
+		w,  w, 1.0f,  1.5f, 0.0f,
 		-w, -w, 1.0f,  0.0f, 1.0f,
-		w, -w, 1.0f,  1.0f, 1.0f,
+		w, -w, 1.0f,  1.5f, 1.0f,
 		 -w, -w, 1.0f, 0.0f, 1.0f,
-		 w,  w, 1.0f,  1.0f,  0.0f
+		 w,  w, 1.0f,  1.5f,  0.0f
 	};
 	int g = DxFramework->CreateGeometry ();
 	DxFramework->AddGeometry ( g, render_plane_data );
@@ -63,6 +62,7 @@ bool Form::InitDxContext (HWND hWnd) {
     interface_objects_set = DxFramework->CreateStaticObjectsSet();
 
 	back_texture = DxFramework->CreateTexture2D( width_, height_, 1, DXGI_FORMAT_R8G8B8A8_UNORM );
+    //back_texture = DxFramework->CreateTexture2D (512, 512, 1, DXGI_FORMAT_B8G8R8A8_UNORM);
 	DxFramework->CreateRtvForTexture( back_texture );
 	DxFramework->CreateSrvForTexture( back_texture );
 
@@ -82,6 +82,8 @@ bool Form::InitDxContext (HWND hWnd) {
     }
 
     DxFramework->AddStaticObject( interface_objects_set, interface_object );
+
+	//DxFramework->LoadTextureFromDds (back_texture, L"C:\\Users\\khaes\\Documents\\GitHub\\Pathtracing_lightmap\\bin\\x64\\Debug\\textures\\Dexter.dds");
 
     return true;
 }
