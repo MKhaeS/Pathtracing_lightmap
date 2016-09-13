@@ -33,7 +33,7 @@ public:
     void Render ();	
 
     
-    // --- User interface ---
+    // --- High level user interface ---
     int CreateRootSignature ();
 
 	int CreateTextureRootSignature ();
@@ -64,18 +64,54 @@ public:
 
     int CreateBufferFromGeometry (const int& gidx, const int& stride, int* viewidx);
 
-	int CreateTextureResource( const int& width, const int& height, const int& samples, const DXGI_FORMAT& format );
+
+    // --- Textures ---
+	int CreateTexture2D( const int& width, const int& height, 
+                         const int& samples, const DXGI_FORMAT& format );
+    bool CreateRtvForTexture( const int& texture );
+	bool CreateSrvForTexture( const int& texture );
+
+
+
+    // --- Render ---
+    void SetRenderTarget( const int& rtvTexture, const XMFLOAT4& clearColor );
+    void DrawStaticObjectsSets(int* noObjects, const int& size);
+    void RenderToTarget();
+
+
+	struct RootParameter
+	{
+		D3D12_ROOT_PARAMETER_TYPE	Type		= D3D12_ROOT_PARAMETER_TYPE_DESCRIPTOR_TABLE;
+		int							Slot        =  0;
+		int							Texture		= -1;
+	};
+
     
     struct Static3DObject
     {
-        int		VertexBufferView	= 0;
-        int     NumOfVerts          = 0;
-        int		RootSignature		= 0;
-        int		Pso					= 0;
-        bool	Visible				= true;
-    };
-    int AddStaticObject( std::shared_ptr<Static3DObject> object );
+        int		                VertexBufferView	= 0;
+        int                     NumOfVerts          = 0;
+        int		                RootSignature		= 0;
+        int		                Pso					= 0;
+        bool	                Visible				= true;
+        D3D_PRIMITIVE_TOPOLOGY  Topology            = D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST;
+		std::vector<RootParameter>		RootParameters;
 
+    };    
+
+    typedef std::vector<std::shared_ptr<Static3DObject>> StaticObjectsSet;
+    int AddStaticObject( const int& objectSet, std::shared_ptr<Static3DObject> object );
+    int CreateStaticObjectsSet();
+
+    struct Texture2D
+    {
+        ComPtr<ID3D12Resource>              Resource            = nullptr;
+        ComPtr<ID3D12DescriptorHeap>        RtvDescriptorHeap   = nullptr;
+        ComPtr<ID3D12DescriptorHeap>        SrvDescriptorHeap   = nullptr;
+        D3D12_CPU_DESCRIPTOR_HANDLE         RTV                 = {};
+        D3D12_CPU_DESCRIPTOR_HANDLE         SRV                 = {};
+        D3D12_RESOURCE_STATES               State               = D3D12_RESOURCE_STATE_COMMON;        
+    };
 
 private:
 
@@ -86,7 +122,7 @@ private:
 	bool                                    m_bDebugLayerActive_    = false;
 
 	ComPtr<IDXGIFactory4>                   m_Factory_              = nullptr;
-	ComPtr<ID3D12Device>                    m_Device_               = nullptr;	
+	ComPtr<ID3D12Device>                    m_Device               = nullptr;	
     std::vector <ComPtr<IDXGIAdapter1>>	    m_SystemAdapters_;
 
     ComPtr<ID3D12Fence>                     m_Fence_                = nullptr;
@@ -134,7 +170,7 @@ private:
     //-end- --- Initialization ---
 
 
-    // --- Resource manipulation ---
+    // --- Resource manipulation --- "FatDXResourceManipulation.cpp"
     ComPtr<ID3D12Resource>      CreateGpuBuffer           ( const UINT64&   bufferSize );
 
     ComPtr<ID3D12Resource>      CreateUploadBuffer        ( const UINT64&   bufferSize );
@@ -164,7 +200,7 @@ private:
     void WaitSignal ();
 
     
-    //User service collections;
+    // --- Pipeline stages elements---
     std::vector<ComPtr<ID3D12RootSignature>>                m_RootSignatures;
     int                                                     m_nRootSignatures         = 0;
     std::vector<ComPtr<ID3DBlob>>                           m_VertexShaders;
@@ -172,25 +208,35 @@ private:
     std::vector<ComPtr<ID3DBlob>>                           m_PixelShaders;
     int                                                     m_nPixelShaders           = 0;
     std::vector<D3D12_RASTERIZER_DESC>                      m_RasterizerDescs;
-    int                                                     m_nRasterizerDescs         = 0;
+    int                                                     m_nRasterizerDescs        = 0;
     std::vector<D3D12_INPUT_LAYOUT_DESC>                    m_LayoutDescs;
     int                                                     m_nLayoutDescs            = 0;
     std::vector<ComPtr<ID3D12PipelineState>>                m_Psos;
     int                                                     m_nPsos                   = 0;
     std::vector<D3D12_INPUT_ELEMENT_DESC>                   m_ElementsDescs;
+
+
     std::vector<std::shared_ptr<std::vector<float>>>        m_Geometries;
     int                                                     m_nGeometries             = 0;
     std::vector<ComPtr<ID3D12Resource>>                     m_Resources;
     int                                                     m_nResourcses             = 0;
+
+
     std::vector<ComPtr<ID3D12DescriptorHeap>>               m_DescriptorHeaps;
+    int                                                     m_nDescriptorHeaps        = 0;
     std::vector<D3D12_CPU_DESCRIPTOR_HANDLE>                m_DescriptorHandles;
+    int                                                     m_nDescriptorHandles      = 0;
+
     std::vector<D3D12_VERTEX_BUFFER_VIEW>                   m_VertexBufferViews;
     int                                                     m_nVertexBuffersViews     = 0;
 
     std::vector<std::shared_ptr<Static3DObject>>            m_StaticObjects;
     int                                                     m_nStaticObjects          = 0;
+    std::vector<std::unique_ptr<StaticObjectsSet>>          m_StaticObjectsSets;
+    int                                                     m_nStaticObjectsSets      = 0;
 
-
+    std::vector<std::unique_ptr<Texture2D>>                 m_Textures;
+    int                                                     m_nTextures               = 0;
 
 
 

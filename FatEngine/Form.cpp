@@ -31,10 +31,13 @@ void Form::UpdateView () {
         interface_object->Pso = color_pso;
     }
 
-    DxFramework->AddStaticObject( interface_object );
+    DxFramework->AddStaticObject( 0, interface_object );
 }
 
 void Form::Update () {
+    DxFramework->SetRenderTarget( back_texture, XMFLOAT4( 0.0f, 0.0f, 0.0f, 1.0f ) );
+    int obj[] = { 0 };
+    DxFramework->DrawStaticObjectsSets( obj, 1 );
     DxFramework->Render();
 }
 
@@ -45,17 +48,28 @@ bool Form::InitDxContext (HWND hWnd) {
 																 false, 1 );
 	CreateContextForColorShader();
 	CreateContextForTextureShader();
+	float w = 0.5f;
 	std::vector<float> render_plane_data = {
-		-1.0f,  1.0f, 1.0f,  0.0f, 0.0f,
-		 1.0f,  1.0f, 1.0f,  1.0f, 0.0f,
-		-1.0f, -1.0f, 1.0f,  0.0f, 1.0f,
-		 1.0f, -1.0f, 1.0f,  1.0f, 1.0f,
-		 -1.0f, -1.0f, 1.0f, 0.0f, 1.0f,
-		 1.0f,  1.0f, 1.0f,  1.0f,  0.0f
+		-w,  w, 1.0f,  0.0f, 0.0f,
+		w,  w, 1.0f,  1.0f, 0.0f,
+		-w, -w, 1.0f,  0.0f, 1.0f,
+		w, -w, 1.0f,  1.0f, 1.0f,
+		 -w, -w, 1.0f, 0.0f, 1.0f,
+		 w,  w, 1.0f,  1.0f,  0.0f
 	};
 	int g = DxFramework->CreateGeometry ();
 	DxFramework->AddGeometry ( g, render_plane_data );
 	int buffer_view = DxFramework->CreateBufferFromGeometry ( g, 20, &texture_buffer_view );
+    interface_objects_set = DxFramework->CreateStaticObjectsSet();
+
+	back_texture = DxFramework->CreateTexture2D( width_, height_, 1, DXGI_FORMAT_R8G8B8A8_UNORM );
+	DxFramework->CreateRtvForTexture( back_texture );
+	DxFramework->CreateSrvForTexture( back_texture );
+
+	FatDXFramework::RootParameter rp;
+	{
+		rp.Texture = back_texture;
+	}
 
     auto interface_object = std::make_shared<FatDXFramework::Static3DObject>();
     {
@@ -64,9 +78,11 @@ bool Form::InitDxContext (HWND hWnd) {
         interface_object->Visible = true;
         interface_object->RootSignature = texture_root_signature;
         interface_object->Pso = texture_pso;
+		interface_object->RootParameters.push_back( rp );
     }
 
-    DxFramework->AddStaticObject( interface_object );
+    DxFramework->AddStaticObject( interface_objects_set, interface_object );
+
     return true;
 }
 
@@ -108,7 +124,7 @@ void Form::CreateContextForTextureShader() {
 		CreatePixelShaderFromCso ( L"C:\\Users\\khaes\\Documents\\GitHub\\Pathtracing_lightmap\\bin\\x64\\Debug\\PS_tex.cso" );
 	int layout = DxFramework->CreatePositionTextureLayout();
 	texture_pso = DxFramework->CreatePipelineStateObject ( texture_root_signature,
-														   vertex_shader,
+                                                           vertex_shader,
 														   pixel_shader,
 														   rasterizer_desc,
 														   layout,

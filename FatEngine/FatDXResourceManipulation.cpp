@@ -24,7 +24,7 @@ ComPtr<ID3D12Resource> FatDXFramework::CreateGpuBuffer ( const UINT64 &     buff
     defResourceDescription.Flags                   = D3D12_RESOURCE_FLAG_NONE;
     defResourceDescription.Layout                  = D3D12_TEXTURE_LAYOUT_ROW_MAJOR;
 
-    HRESULT res = m_Device_->CreateCommittedResource ( &defHeapProperties, D3D12_HEAP_FLAG_NONE,
+    HRESULT res = m_Device->CreateCommittedResource ( &defHeapProperties, D3D12_HEAP_FLAG_NONE,
                                                        &defResourceDescription, D3D12_RESOURCE_STATE_COMMON,
                                                        nullptr, IID_PPV_ARGS ( &gpuBuffer ) );
     if ( FAILED ( res ) ) {
@@ -59,7 +59,7 @@ ComPtr<ID3D12Resource> FatDXFramework::CreateUploadBuffer ( const UINT64 &  buff
     uploadResourceDescription.Flags                   = D3D12_RESOURCE_FLAG_NONE;
     uploadResourceDescription.Layout                  = D3D12_TEXTURE_LAYOUT_ROW_MAJOR;
 
-    HRESULT res  = m_Device_->CreateCommittedResource ( &uploadHeapProperties, D3D12_HEAP_FLAG_NONE,
+    HRESULT res  = m_Device->CreateCommittedResource ( &uploadHeapProperties, D3D12_HEAP_FLAG_NONE,
                                                         &uploadResourceDescription, D3D12_RESOURCE_STATE_GENERIC_READ,
                                                         nullptr, IID_PPV_ARGS ( &uploadBuffer ) );
     if ( FAILED ( res ) ) {
@@ -117,6 +117,10 @@ bool FatDXFramework::CopyDataToBuffer ( const ComPtr<ID3D12Resource>&   destinat
 void FatDXFramework::ResourceStateTransition ( const ComPtr<ID3D12Resource>&    resource,
                                                D3D12_RESOURCE_STATES            prev_state,
                                                D3D12_RESOURCE_STATES            next_state ) {
+    if ( prev_state == next_state ) {
+        return;
+    }
+
     D3D12_RESOURCE_BARRIER                           copyBarrier = {};
     copyBarrier.Type                                 = D3D12_RESOURCE_BARRIER_TYPE_TRANSITION;
     copyBarrier.Flags                                = D3D12_RESOURCE_BARRIER_FLAG_NONE;

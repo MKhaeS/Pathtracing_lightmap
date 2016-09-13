@@ -60,7 +60,7 @@ void FatDXFramework::NumerateAdapters() {
 
 bool FatDXFramework::CreateDeviceFromAdapter( ComPtr<IDXGIAdapter1> noAdapter ) {
     if ( noAdapter != nullptr ) {
-        HRESULT res = D3D12CreateDevice( noAdapter.Get(), D3D_FEATURE_LEVEL_11_0, IID_PPV_ARGS  ( &m_Device_ ) );
+        HRESULT res = D3D12CreateDevice( noAdapter.Get(), D3D_FEATURE_LEVEL_11_0, IID_PPV_ARGS  ( &m_Device ) );
 
         if ( FAILED ( res ) ) {
             assert( !"Failed to create D3D12 device" );
@@ -75,8 +75,8 @@ bool FatDXFramework::CreateDeviceFromAdapter( ComPtr<IDXGIAdapter1> noAdapter ) 
 
 
 bool FatDXFramework::CreateFence() {
-    if ( m_Device_ != nullptr ) {
-        HRESULT res = m_Device_->CreateFence( 0, D3D12_FENCE_FLAG_NONE, IID_PPV_ARGS  ( &m_Fence_ ) );
+    if ( m_Device != nullptr ) {
+        HRESULT res = m_Device->CreateFence( 0, D3D12_FENCE_FLAG_NONE, IID_PPV_ARGS  ( &m_Fence_ ) );
         if ( FAILED( res ) ) {
             assert( !"Failed to create device fence" );
             return false;
@@ -89,37 +89,37 @@ bool FatDXFramework::CreateFence() {
 
 
 void FatDXFramework::AssignDescriptorSizes() {
-    if ( m_Device_ != nullptr ) {
-        m_uSizeRtv_    = m_Device_->GetDescriptorHandleIncrementSize( D3D12_DESCRIPTOR_HEAP_TYPE_RTV );
-        m_uSizeDsv_    = m_Device_->GetDescriptorHandleIncrementSize( D3D12_DESCRIPTOR_HEAP_TYPE_DSV );
-        m_uSizeCbvSrv_ = m_Device_->GetDescriptorHandleIncrementSize( D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV );
+    if ( m_Device != nullptr ) {
+        m_uSizeRtv_    = m_Device->GetDescriptorHandleIncrementSize( D3D12_DESCRIPTOR_HEAP_TYPE_RTV );
+        m_uSizeDsv_    = m_Device->GetDescriptorHandleIncrementSize( D3D12_DESCRIPTOR_HEAP_TYPE_DSV );
+        m_uSizeCbvSrv_ = m_Device->GetDescriptorHandleIncrementSize( D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV );
     }
 }
 
 
 
 bool FatDXFramework::CreateCommandStructure() {
-    if ( m_Device_ != nullptr ) {
+    if ( m_Device != nullptr ) {
 
         D3D12_COMMAND_QUEUE_DESC    queueDesc = {};
         queueDesc.Type              = D3D12_COMMAND_LIST_TYPE_DIRECT;
         queueDesc.Flags             = D3D12_COMMAND_QUEUE_FLAG_NONE;
 
 
-        HRESULT res = m_Device_->CreateCommandQueue( &queueDesc, 
+        HRESULT res = m_Device->CreateCommandQueue( &queueDesc, 
                                                      IID_PPV_ARGS  ( &m_CommandQueue_ ) );
         if ( FAILED ( res ) ) {
             assert( !"Failed to create command queue" );
             return false;
         }
-        res = m_Device_->CreateCommandAllocator( D3D12_COMMAND_LIST_TYPE_DIRECT,
+        res = m_Device->CreateCommandAllocator( D3D12_COMMAND_LIST_TYPE_DIRECT,
                                                  IID_PPV_ARGS  ( &m_CommandAllocator_ ) );
         if ( FAILED ( res ) ) {
             assert( !"Failed to create command allocator" );
             return false;
         }
 
-        res = m_Device_->CreateCommandList( 0, D3D12_COMMAND_LIST_TYPE_DIRECT,
+        res = m_Device->CreateCommandList( 0, D3D12_COMMAND_LIST_TYPE_DIRECT,
                                             m_CommandAllocator_.Get(),
                                             nullptr,
                                             IID_PPV_ARGS  ( &m_CommandList_ ) );
@@ -140,11 +140,11 @@ bool FatDXFramework::CreateCommandStructure() {
 bool FatDXFramework::CreateSwapChain( const int& width, const int& height,
                                       const DXGI_FORMAT& buffer_format,
                                       const int& nBuffers ) {
-    if ( m_Factory_ != nullptr && m_Device_ != nullptr ) {
+    if ( m_Factory_ != nullptr && m_Device != nullptr ) {
         m_SwapChain_.Reset();
         // Maximum samples count here is 1 due to 
         //      https://msdn.microsoft.com/ru-ru/library/windows/desktop/bb173077(v=vs.85).aspx
-        // To use multisampling, set the appropriate RTV
+        // To use multisampling, set the appropriate RT texture
         // This version supports only _FLIP_ swap effects
         // With non _FLIP_ effect in earlier versions you were able to read and write only in buffer(0)
         m_SampleDescription_.Count            = 1;
@@ -190,14 +190,14 @@ bool FatDXFramework::CreateSwapChain( const int& width, const int& height,
 
 
 bool FatDXFramework::CreateDescriptorHeaps() {
-    if ( m_Device_ != nullptr ) {
+    if ( m_Device != nullptr ) {
         D3D12_DESCRIPTOR_HEAP_DESC      rtvHeapDesc;
         rtvHeapDesc.Type                = D3D12_DESCRIPTOR_HEAP_TYPE_RTV;
         rtvHeapDesc.Flags               = D3D12_DESCRIPTOR_HEAP_FLAG_NONE;
         rtvHeapDesc.NumDescriptors      = m_nSwapChainBuffers_;
         rtvHeapDesc.NodeMask            = 0;
 
-        HRESULT res = m_Device_->CreateDescriptorHeap( &rtvHeapDesc, IID_PPV_ARGS  ( &m_RtvHeap_ ) );
+        HRESULT res = m_Device->CreateDescriptorHeap( &rtvHeapDesc, IID_PPV_ARGS  ( &m_RtvHeap_ ) );
         if ( FAILED( res ) ) {
             assert( !"Failed to create RTV descriptor heap" );
             return false;
@@ -209,7 +209,7 @@ bool FatDXFramework::CreateDescriptorHeaps() {
         dsvHeapDesc.NumDescriptors      = 1;
         dsvHeapDesc.NodeMask            = 0;
 
-        res = m_Device_->CreateDescriptorHeap( &dsvHeapDesc, IID_PPV_ARGS  ( &m_DsvHeap_ ) );
+        res = m_Device->CreateDescriptorHeap( &dsvHeapDesc, IID_PPV_ARGS  ( &m_DsvHeap_ ) );
         if ( FAILED( res ) ) {
             assert( !"Failed to create DSV descriptor heap" );
             return false;
@@ -222,11 +222,11 @@ bool FatDXFramework::CreateDescriptorHeaps() {
 
 
 bool FatDXFramework::CreateRenderTargetView() {
-    if ( m_Device_ != nullptr ) {
+    if ( m_Device != nullptr ) {
         m_RtvHeapHandle_ = m_RtvHeap_->GetCPUDescriptorHandleForHeapStart();
         D3D12_CPU_DESCRIPTOR_HANDLE temp_handle = m_RtvHeapHandle_;
         for ( auto buf : m_SwapChainBuffers_ ) {
-            m_Device_->CreateRenderTargetView( buf.Get(), nullptr, temp_handle );
+            m_Device->CreateRenderTargetView( buf.Get(), nullptr, temp_handle );
             temp_handle.ptr += m_uSizeRtv_;
         }
         return true;
@@ -238,7 +238,7 @@ bool FatDXFramework::CreateRenderTargetView() {
 
 
 bool FatDXFramework::CreateDepthStencilView() {
-    if ( m_Device_ != nullptr ) {
+    if ( m_Device != nullptr ) {
         m_DsvHeapHandle_ = m_DsvHeap_->GetCPUDescriptorHandleForHeapStart();
         D3D12_RESOURCE_DESC                 depthStencilDesc;
         depthStencilDesc.Alignment          = 0;
@@ -264,7 +264,7 @@ bool FatDXFramework::CreateDepthStencilView() {
         heapProps.Type                      = D3D12_HEAP_TYPE_DEFAULT;
         heapProps.VisibleNodeMask           = 1;
 
-        HRESULT res = m_Device_->CreateCommittedResource( &heapProps,
+        HRESULT res = m_Device->CreateCommittedResource( &heapProps,
                                                           D3D12_HEAP_FLAG_NONE,
                                                           &depthStencilDesc,
                                                           D3D12_RESOURCE_STATE_DEPTH_WRITE,
@@ -274,7 +274,7 @@ bool FatDXFramework::CreateDepthStencilView() {
             assert( !"Failed to create depth stencil view" );
             return false;
         }
-        m_Device_->CreateDepthStencilView( m_DepthStencilBuffer_.Get(),
+        m_Device->CreateDepthStencilView( m_DepthStencilBuffer_.Get(),
                                            nullptr,
                                            m_DsvHeapHandle_ );
         return true;

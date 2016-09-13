@@ -67,6 +67,10 @@ private:
 	int rasterizer_desc = 0;
 	int color_buffer_view = 0;
 	int texture_buffer_view = 0;
+    int interface_objects_set = 0;
+
+    int back_texture;
+    int back_texture_view;
 
 	void CreateContextForColorShader();
 	void CreateContextForTextureShader();
