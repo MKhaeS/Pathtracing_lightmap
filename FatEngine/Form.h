@@ -8,7 +8,10 @@
 
 #include "EventHandler.h"
 #include "Button.h"
+#include "FatDxTexture.h"
 
+using namespace FatDx;
+using namespace std;
 
 class Form {
 	Form(const Form&)				= delete;
@@ -36,6 +39,20 @@ protected:
     virtual void UpdateView () final;
 
     std::shared_ptr<FatDXFramework> DxFramework;
+
+    void SetBackPlainRenderTarget ();
+
+    virtual void UserRender () = 0;
+
+    int color_root_signature = 0;
+    int color_pso = 0;
+    int texture_root_signature = 0;
+    int texture_pso = 0;
+    int rasterizer_desc = 0;
+    int color_buffer_view = 0;
+    int texture_buffer_view = 0;
+    
+    
 	
 private:
 	HWND		hWnd_			= 0;
@@ -60,20 +77,16 @@ private:
 
 	//Inreface
 
-	int color_root_signature = 0;
-	int color_pso = 0;
-	int texture_root_signature = 0;
-	int texture_pso = 0;
-	int rasterizer_desc = 0;
-	int color_buffer_view = 0;
-	int texture_buffer_view = 0;
+	
     int interface_objects_set = 0;
-
-    int back_texture;
+    shared_ptr<Texture> back_texture;
     int back_texture_view;
 
 	void CreateContextForColorShader();
 	void CreateContextForTextureShader();
 
+    std::shared_ptr<FatDXFramework::MatrixBuffer> mat_buffer;
+
+    
 };
 

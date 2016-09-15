@@ -1,4 +1,5 @@
 Texture2D t1 : register(t0);
+Texture2D t2 : register(t0);
 SamplerState s1 : register(s0);
 
 struct VSout

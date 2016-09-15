@@ -4,6 +4,7 @@
 #include <Windowsx.h>
 
 
+
 Form::Form () {
 	appInstance_ = Application::GetInstance ();
     DxFramework  = Application::DxFrameWork;
@@ -18,7 +19,7 @@ void Form::UpdateView () {
         int n = 0;
         auto vertex_data = c->GetVertexColorData ( i, width_, height_, 0.4f, &n, &stride );
 		++i;        
-        DxFramework->AddGeometry (g, *vertex_data);
+        DxFramework->AddDataToGeometry (g, *vertex_data);
         num_of_verts += n;
 	}
     int buffer_view = DxFramework->CreateBufferFromGeometry (g, 28, &color_buffer_view );
@@ -31,17 +32,21 @@ void Form::UpdateView () {
         interface_object->Pso = color_pso;
     }
 
-    DxFramework->AddStaticObject( 0, interface_object );
+    DxFramework->AddStaticObject(interface_objects_set, interface_object );
+}
+
+void Form::SetBackPlainRenderTarget () {
+    DxFramework->SetRenderTarget (back_texture, XMFLOAT4 (0.0f, 0.0f, 0.0f, 0.0f));
 }
 
 void Form::Update () {
-    //DxFramework->SetRenderTarget( back_texture, XMFLOAT4( 0.0f, 0.0f, 0.0f, 1.0f ) );
-
-    DxFramework->Render();
+    UserRender ();
+    int objs[] ={ interface_objects_set };
+    DxFramework->Render (objs, 1);
 }
 
 bool Form::InitDxContext (HWND hWnd) {    
-    DxFramework->Initialize (hWnd_, width_, height_, DXGI_FORMAT_R8G8B8A8_UNORM);   
+    DxFramework->Initialize (hWnd_, width_, height_, DXGI_FORMAT_B8G8R8A8_UNORM);   
 	rasterizer_desc = DxFramework->CreateRasterizerDescription ( D3D12_FILL_MODE_SOLID, 
 																 D3D12_CULL_MODE_NONE, 
 																 false, 1 );
@@ -50,27 +55,43 @@ bool Form::InitDxContext (HWND hWnd) {
 	float w = 0.5f;
 	std::vector<float> render_plane_data = {
 		-w,  w, 1.0f,  0.0f, 0.0f,
-		w,  w, 1.0f,  1.5f, 0.0f,
+		w,  w, 1.0f,  1.0f, 0.0f,
 		-w, -w, 1.0f,  0.0f, 1.0f,
-		w, -w, 1.0f,  1.5f, 1.0f,
+		w, -w, 1.0f,  1.0f, 1.0f,
 		 -w, -w, 1.0f, 0.0f, 1.0f,
-		 w,  w, 1.0f,  1.5f,  0.0f
+		 w,  w, 1.0f,  1.0f,  0.0f
 	};
 	int g = DxFramework->CreateGeometry ();
-	DxFramework->AddGeometry ( g, render_plane_data );
+	DxFramework->AddDataToGeometry ( g, render_plane_data );
 	int buffer_view = DxFramework->CreateBufferFromGeometry ( g, 20, &texture_buffer_view );
     interface_objects_set = DxFramework->CreateStaticObjectsSet();
 
-	back_texture = DxFramework->CreateTexture2D( width_, height_, 1, DXGI_FORMAT_R8G8B8A8_UNORM );
-    //back_texture = DxFramework->CreateTexture2D (512, 512, 1, DXGI_FORMAT_B8G8R8A8_UNORM);
-	DxFramework->CreateRtvForTexture( back_texture );
-	DxFramework->CreateSrvForTexture( back_texture );
+    back_texture = make_shared<Texture> (DxFramework->GetDevice (), D3D12_HEAP_TYPE_DEFAULT,
+                                         width_, height_, true, true, 1);
+    
+    mat_buffer = std::make_shared<FatDXFramework::MatrixBuffer> (DxFramework);
+
+    XMMATRIX tr = XMMatrixTranslation (0.0f, 0.0f, 0.0f);
+    XMMATRIX view = XMMatrixPerspectiveFovLH (XM_PI / 2, (float)width_ / height_, 0.1f, 1000.0f);
+    FXMVECTOR camera_position = { 0.0f, 0.0f, -2.0f, 0.0f};
+    FXMVECTOR look ={ 0.5f,0.0f, 1.0f, 0.0f };
+    FXMVECTOR up ={ 0.0f,1.0f,0.0f,0.0f };
+    XMMATRIX lookat = XMMatrixLookAtLH (camera_position, look, up);
+    (*mat_buffer)[0] *= tr * lookat * view;
 
 	FatDXFramework::RootParameter rp;
 	{
 		rp.Texture = back_texture;
 	}
 
+
+    FatDXFramework::RootParameter rp_matrix;
+    {
+        rp_matrix.Type = D3D12_ROOT_PARAMETER_TYPE_CBV;
+        rp_matrix.Slot = 1;
+        rp_matrix.ConstantBuffer = mat_buffer->cb ()->GetGPUVirtualAddress ();
+    }
+    mat_buffer->Upload ();
     auto interface_object = std::make_shared<FatDXFramework::Static3DObject>();
     {
         interface_object->NumOfVerts = 6;
@@ -79,6 +100,7 @@ bool Form::InitDxContext (HWND hWnd) {
         interface_object->RootSignature = texture_root_signature;
         interface_object->Pso = texture_pso;
 		interface_object->RootParameters.push_back( rp );
+        interface_object->RootParameters.push_back (rp_matrix);
     }
 
     DxFramework->AddStaticObject( interface_objects_set, interface_object );
@@ -138,7 +160,7 @@ void Form::ShowOnScreen () const {
 }
 
 bool Form::CreateForm () {
-    InitComponents ();
+    
 	wc_.lpszClassName      = "BasicWndNoCaption";
 	wc_.style              = CS_HREDRAW | CS_VREDRAW;
 	wc_.hInstance          = appInstance_;
@@ -166,8 +188,9 @@ bool Form::CreateForm () {
 	ShowOnScreen ();
 
     OnMouseClick += [this](WPARAM wParam, LPARAM lParam) { OnMouseClickHandler (wParam, lParam); };
-    
     InitDxContext (hWnd_);
+    InitComponents ();
+    
     UpdateView ();
 	return true;
 }
